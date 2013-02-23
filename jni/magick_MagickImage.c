@@ -1390,8 +1390,6 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_flipImage
 }
 
 
-
-
 /*
  * Class:     magick_MagickImage
  * Method:    flopImage
@@ -1430,44 +1428,47 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_flopImage
 }
 
 
-
 /*
  * Class:     magick_MagickImage
  * Method:    fx
  * Signature: ()Lmagick/MagickImage;
+*/
 
 JNIEXPORT jobject JNICALL Java_magick_MagickImage_fxImage
-    (JNIEnv *env, jobject self)
+    (JNIEnv *env, jobject self, jstring fxString)
 {
+
     jobject newImage;
-    Image *image, *fxImage;
+    Image *image, *fxedImage;
     ExceptionInfo exception;
+    const char *cstr;
 
     image = (Image*) getHandle(env, self, "magickImageHandle", NULL);
     if (image == NULL) {
-	throwMagickException(env, "Cannot obtain image handle");
+	throwMagickException(env, "Cannot obtain Image handle");
 	return NULL;
     }
 
+    cstr = (*env)->GetStringUTFChars(env, fxString, 0);
     GetExceptionInfo(&exception);
-    fxImage = FxImage(image, &exception);
-    if (fxImage == NULL) {
-	throwMagickApiException(env, "Cannot apply fx to image", &exception);
+    fxedImage = FxImage(image, cstr, &exception);
+    if (fxedImage == NULL) {
+	throwMagickApiException(env, "Cannot fx image", &exception);
 	DestroyExceptionInfo(&exception);
 	return NULL;
     }
     DestroyExceptionInfo(&exception);
+    (*env)->ReleaseStringUTFChars(env, fxString, cstr);
 
-    newImage = newImageObject(env, fxImage);
+    newImage = newImageObject(env, fxedImage);
     if (newImage == NULL) {
-	DestroyImages(fxImage);
+	DestroyImages(fxedImage);
 	throwMagickException(env, "Cannot create new MagickImage object");
 	return NULL;
     }
 
     return newImage;
 }
-*/
 
 
 /*
@@ -3909,7 +3910,6 @@ JNIEXPORT jboolean JNICALL Java_magick_MagickImage_levelImage
 
     return retVal;
 }
-
 
 
 /*
