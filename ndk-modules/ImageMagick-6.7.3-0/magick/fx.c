@@ -2984,7 +2984,7 @@ MagickExport Image *FxImage(const Image *image,const char *expression,
   Image
     *fx_image;
 
-  fx_image=FxImageChannel(image,GrayChannel,expression,exception);
+  fx_image=FxImageChannel(image,DefaultChannels,expression,exception);
   return(fx_image);
 }
 
