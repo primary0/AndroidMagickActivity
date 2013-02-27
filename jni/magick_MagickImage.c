@@ -1427,6 +1427,48 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_flopImage
     return newImage;
 }
 
+/*
+ * Class:     magick_MagickImage
+ * Method:    fxChannel
+ * Signature: ()Lmagick/MagickImage;
+*/
+
+JNIEXPORT jobject JNICALL Java_magick_MagickImage_functionImage
+    (JNIEnv *env, jobject self, jstring fxString)
+{
+
+    jobject newImage;
+    Image *image, *fxedImage;
+    ExceptionInfo exception;
+    const char *cstr;
+
+    image = (Image*) getHandle(env, self, "magickImageHandle", NULL);
+    if (image == NULL) {
+	throwMagickException(env, "Cannot obtain Image handle");
+	return NULL;
+    }
+
+    cstr = (*env)->GetStringUTFChars(env, fxString, 0);
+    GetExceptionInfo(&exception);
+    FunctionImage(image, PolynomialFunction, 2, cstr, &exception);
+    if (fxedImage == NULL) {
+	throwMagickApiException(env, "Cannot function image", &exception);
+	DestroyExceptionInfo(&exception);
+	return NULL;
+    }
+    DestroyExceptionInfo(&exception);
+    (*env)->ReleaseStringUTFChars(env, fxString, cstr);
+
+    newImage = newImageObject(env, image);
+    if (newImage == NULL) {
+	DestroyImages(fxedImage);
+	throwMagickException(env, "Cannot create new MagickImage object");
+	return NULL;
+    }
+
+    return newImage;
+}
+
 
 /*
  * Class:     magick_MagickImage
