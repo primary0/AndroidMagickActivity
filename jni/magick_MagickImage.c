@@ -1450,7 +1450,7 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_functionImage
 
     cstr = (*env)->GetStringUTFChars(env, fxString, 0);
     GetExceptionInfo(&exception);
-    FunctionImage(image, PolynomialFunction, 2, cstr, &exception);
+    FunctionImage(image, PolynomialFunction, 0, cstr, &exception);
     if (fxedImage == NULL) {
 	throwMagickApiException(env, "Cannot function image", &exception);
 	DestroyExceptionInfo(&exception);
