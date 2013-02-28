@@ -7,7 +7,6 @@
 #include <magick/api.h>
 //#include "magick_MagickImage.h"
 #include "jmagick.h"
-
 #include <android/log.h>
 
 #define APPNAME "Magick"
@@ -1429,7 +1428,7 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_flopImage
 
 /*
  * Class:     magick_MagickImage
- * Method:    fxChannel
+ * Method:    function
  * Signature: ()Lmagick/MagickImage;
 */
 
@@ -1437,35 +1436,67 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_functionImage
     (JNIEnv *env, jobject self, jstring fxString)
 {
 
+	// __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "The value of 1 + 1 is %d", 14);
+
     jobject newImage;
     Image *image, *fxedImage;
     ExceptionInfo exception;
     const char *cstr;
+    char *arguments;
+    char token[MaxTextExtent];
+    const char *p;
+    double *parameters;
+    register ssize_t x;
+    size_t number_parameters;
+    ImageInfo *mogrify_info;
 
     image = (Image*) getHandle(env, self, "magickImageHandle", NULL);
     if (image == NULL) {
-	throwMagickException(env, "Cannot obtain Image handle");
-	return NULL;
+    	throwMagickException(env, "Cannot obtain Image handle");
+    	return NULL;
     }
 
     cstr = (*env)->GetStringUTFChars(env, fxString, 0);
+
+    mogrify_info = AcquireImageInfo();
+    arguments = InterpretImageProperties(mogrify_info, image, cstr);
+
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "The value of 1 + 1 is %s", cstr);
+
+    p = (char *) arguments;
+	for (x = 0; *p != '\0'; x++) {
+		GetMagickToken(p, &p, token);
+		if (*token == ',')
+			GetMagickToken(p,&p,token);
+	}
+	number_parameters = (size_t) x;
+
+    parameters = (double *) AcquireQuantumMemory(number_parameters, sizeof(*parameters));
+    p = (char *) arguments;
+    for (x = 0; (x < (ssize_t) number_parameters) && (*p != '\0'); x++) {
+    	GetMagickToken(p, &p, token);
+    	if (*token == ',') {
+    		GetMagickToken(p, &p, token);
+    	}
+    	parameters[x] = InterpretLocaleValue(token, (char **) NULL);
+    }
+
     GetExceptionInfo(&exception);
-    FunctionImage(image, PolynomialFunction, 0, cstr, &exception);
+    FunctionImage(image, PolynomialFunction, number_parameters, parameters, &exception);
     if (fxedImage == NULL) {
-	throwMagickApiException(env, "Cannot function image", &exception);
-	DestroyExceptionInfo(&exception);
-	return NULL;
+    	throwMagickApiException(env, "Cannot function image", &exception);
+    	DestroyExceptionInfo(&exception);
+    	return NULL;
     }
     DestroyExceptionInfo(&exception);
     (*env)->ReleaseStringUTFChars(env, fxString, cstr);
 
     newImage = newImageObject(env, image);
     if (newImage == NULL) {
-	DestroyImages(fxedImage);
-	throwMagickException(env, "Cannot create new MagickImage object");
-	return NULL;
+    	DestroyImages(fxedImage);
+    	throwMagickException(env, "Cannot create new MagickImage object");
+    	return NULL;
     }
-
     return newImage;
 }
 
