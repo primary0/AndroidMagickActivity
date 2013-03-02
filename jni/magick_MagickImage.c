@@ -1461,8 +1461,6 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_functionImage
     mogrify_info = AcquireImageInfo();
     arguments = InterpretImageProperties(mogrify_info, image, cstr);
 
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "The value of 1 + 1 is %s", cstr);
-
     p = (char *) arguments;
 	for (x = 0; *p != '\0'; x++) {
 		GetMagickToken(p, &p, token);
