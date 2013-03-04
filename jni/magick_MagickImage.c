@@ -1553,6 +1553,14 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_functionImageChannel
     }
 
     GetExceptionInfo(&exception);
+	__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Red: %d", RedChannel);
+	__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Green: %d", GreenChannel);
+	__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Blue: %d", BlueChannel);
+	__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Cyan: %d", CyanChannel);
+	__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Magenta: %d", MagentaChannel);
+	__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Yellow: %d", YellowChannel);
+	__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Black: %d", BlackChannel);
+
     FunctionImageChannel(image, channelType, PolynomialFunction, number_parameters, parameters, &exception);
     if (fxedImage == NULL) {
     	throwMagickApiException(env, "Cannot function image", &exception);
@@ -4077,11 +4085,49 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_averageImages
 JNIEXPORT jboolean JNICALL Java_magick_MagickImage_levelImage
   (JNIEnv *env, jobject self, jstring levels)
 {
+	MagickRealType
+		black_point,
+		gamma,
+		white_point;
+
+	MagickStatusType
+		flags;
+
+	GeometryInfo
+		geometry_info;
+
+	Image *image = NULL;
+	const char *cstr;
+	jboolean retVal;
+
+	image = (Image*) getHandle(env, self, "magickImageHandle", NULL);
+	if (image == NULL) {
+		throwMagickException(env, "Cannot obtain Image handle");
+		return JNI_FALSE;
+	}
+
+	cstr = (*env)->GetStringUTFChars(env, levels, 0);
+	flags = ParseGeometry(cstr, &geometry_info);
+	black_point = geometry_info.rho;
+	white_point = (MagickRealType) QuantumRange;
+	if ((flags & SigmaValue) != 0)
+		white_point = geometry_info.sigma;
+		gamma = 1.0;
+	if ((flags & XiValue) != 0)
+		gamma = geometry_info.xi;
+	if ((flags & PercentValue) != 0) {
+		black_point *= (MagickRealType) (QuantumRange/100.0);
+		white_point *= (MagickRealType) (QuantumRange/100.0);
+	}
+	if ((flags & SigmaValue) == 0)
+		white_point = (MagickRealType) QuantumRange-black_point;
+	retVal = LevelImageChannel(image, DefaultChannels, black_point, white_point, gamma);
+	return retVal;
+	/*
     Image *image = NULL;
     const char *cstr;
     jboolean retVal;
 
-    /* Obtain the Image handle */
     image = (Image*) getHandle(env, self,
                                "magickImageHandle", NULL);
     if (image == NULL) {
@@ -4090,10 +4136,12 @@ JNIEXPORT jboolean JNICALL Java_magick_MagickImage_levelImage
     }
 
     cstr = (*env)->GetStringUTFChars(env, levels, 0);
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, cstr);
     retVal = LevelImage(image, cstr);
     (*env)->ReleaseStringUTFChars(env, levels, cstr);
 
     return retVal;
+    */
 }
 
 
