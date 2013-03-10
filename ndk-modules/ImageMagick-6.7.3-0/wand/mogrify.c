@@ -7477,7 +7477,7 @@ WandExport MagickBooleanType MogrifyImageList(ImageInfo *image_info,
             break;
           }
 #if 0
-This has been merged completely into MogrifyImage()
+//This has been merged completely into MogrifyImage()
         if (LocaleCompare("crop",option+1) == 0)
           {
             MagickStatusType

@@ -2762,8 +2762,9 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_vignetteImage
     mogrify_info = AcquireImageInfo();
     GetExceptionInfo(&exception);
 
-    SetImageOption(mogrify_info, "alpha", "on");
-    SetImageOption(mogrify_info, "background", "transparent");
+    (void) SetImageOption(mogrify_info, "alpha", "on");
+    (void) SetImageOption(mogrify_info, "background", "transparent");
+    (void) QueryColorDatabase("transparent", &image->background_color, &exception);
 
     SetGeometryInfo(&geometry_info);
     (void) SyncImageSettings(mogrify_info, image);
