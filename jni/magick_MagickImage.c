@@ -1431,7 +1431,7 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_flopImage
  * Method:    functionImage
  * Signature: ()Lmagick/MagickImage;
 */
-
+/*
 JNIEXPORT jobject JNICALL Java_magick_MagickImage_functionImage
     (JNIEnv *env, jobject self, jstring fxString)
 {
@@ -1498,7 +1498,7 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_functionImage
     return newImage;
 }
 
-
+*/
 /*
  * Class:     magick_MagickImage
  * Method:    functionImageCHannel
@@ -1553,13 +1553,6 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_functionImageChannel
     }
 
     GetExceptionInfo(&exception);
-	//__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Red: %d", RedChannel);
-	//__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Green: %d", GreenChannel);
-	//__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Blue: %d", BlueChannel);
-	//__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Cyan: %d", CyanChannel);
-	//__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Magenta: %d", MagentaChannel);
-	//__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Yellow: %d", YellowChannel);
-	//__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Black: %d", BlackChannel);
 
     FunctionImageChannel(image, channelType, PolynomialFunction, number_parameters, parameters, &exception);
     if (fxedImage == NULL) {
@@ -1585,7 +1578,7 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_functionImageChannel
  * Method:    fx
  * Signature: ()Lmagick/MagickImage;
 */
-
+/*
 JNIEXPORT jobject JNICALL Java_magick_MagickImage_fxImage
     (JNIEnv *env, jobject self, jstring fxString)
 {
@@ -1621,13 +1614,13 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_fxImage
 
     return newImage;
 }
-
+*/
 /*
  * Class:     magick_MagickImage
  * Method:    fxChannel
  * Signature: ()Lmagick/MagickImage;
 */
-
+/*
 JNIEXPORT jobject JNICALL Java_magick_MagickImage_fxImageChannel
     (JNIEnv *env, jobject self, int channelType, jstring fxString)
 {
@@ -1663,7 +1656,7 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_fxImageChannel
 
     return newImage;
 }
-
+*/
 /*
  * Class:     magick_MagickImage
  * Method:    gaussianBlurImage
@@ -2748,22 +2741,16 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_vignetteImage
     (JNIEnv *env, jobject self, jstring fxString)
 {
 
-	// __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "The value of 1 + 1 is %d", 14);
+	// __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Vignette JNI call starting");
 
     jobject newImage;
     Image *image, *fxedImage;
     ExceptionInfo exception;
     const char *cstr;
-    char *arguments;
-    char token[MaxTextExtent];
-    const char *p;
-    double *parameters;
     register ssize_t x;
-    size_t number_parameters;
     ImageInfo *mogrify_info;
     MagickStatusType flags;
     GeometryInfo geometry_info;
-
 
     image = (Image*) getHandle(env, self, "magickImageHandle", NULL);
     if (image == NULL) {
@@ -2772,40 +2759,22 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_vignetteImage
     }
 
     cstr = (*env)->GetStringUTFChars(env, fxString, 0);
-
     mogrify_info = AcquireImageInfo();
-    arguments = InterpretImageProperties(mogrify_info, image, cstr);
-
-    p = (char *) arguments;
-	for (x = 0; *p != '\0'; x++) {
-		GetMagickToken(p, &p, token);
-		if (*token == ',')
-			GetMagickToken(p,&p,token);
-	}
-	number_parameters = (size_t) x;
-
-    parameters = (double *) AcquireQuantumMemory(number_parameters, sizeof(*parameters));
-    p = (char *) arguments;
-    for (x = 0; (x < (ssize_t) number_parameters) && (*p != '\0'); x++) {
-    	GetMagickToken(p, &p, token);
-    	if (*token == ',') {
-    		GetMagickToken(p, &p, token);
-    	}
-    	parameters[x] = InterpretLocaleValue(token, (char **) NULL);
-    }
-
     GetExceptionInfo(&exception);
+
+    SetImageOption(mogrify_info, "alpha", "on");
+    SetImageOption(mogrify_info, "background", "transparent");
 
     SetGeometryInfo(&geometry_info);
     (void) SyncImageSettings(mogrify_info, image);
-    flags = ParseGeometry(parameters, &geometry_info);
+    flags = ParseGeometry(cstr, &geometry_info);
     if ((flags & SigmaValue) == 0)
       geometry_info.sigma = 1.0;
     if ((flags & XiValue) == 0)
       geometry_info.xi = 0.1 * (image)->columns;
     if ((flags & PsiValue) == 0)
       geometry_info.psi = 0.1 * (image)->rows;
-    VignetteImage(image, geometry_info.rho, geometry_info.sigma, (ssize_t)ceil(geometry_info.xi-0.5), (ssize_t) ceil(geometry_info.psi-0.5), &exception);
+    fxedImage = VignetteImage(image, geometry_info.rho, geometry_info.sigma, (ssize_t) ceil(geometry_info.xi-0.5), (ssize_t) ceil(geometry_info.psi-0.5), &exception);
 
     if (fxedImage == NULL) {
     	throwMagickApiException(env, "Cannot function image", &exception);
@@ -2815,16 +2784,15 @@ JNIEXPORT jobject JNICALL Java_magick_MagickImage_vignetteImage
     DestroyExceptionInfo(&exception);
     (*env)->ReleaseStringUTFChars(env, fxString, cstr);
 
-    newImage = newImageObject(env, image);
+    newImage = newImageObject(env, fxedImage);
     if (newImage == NULL) {
     	DestroyImages(fxedImage);
     	throwMagickException(env, "Cannot create new MagickImage object");
     	return NULL;
     }
+
     return newImage;
 }
-
-
 
 
 /*
